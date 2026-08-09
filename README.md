@@ -6,5 +6,13 @@
 2、GPUInstance渲染图形  
 3、自定义Editor实现可视化调试  
 
+
+
+
+
+
+
+自定义Editor界面  
+<img width="1001" height="367" alt="屏幕截图 2026-08-09 213030" src="https://github.com/user-attachments/assets/93bc28f0-c25f-4820-ba1e-3f2a4d21f07b" />
 原游戏已开源（原游戏语言为JavaScript）  
 地址：https://github.com/tobspr-games/shapez.io
