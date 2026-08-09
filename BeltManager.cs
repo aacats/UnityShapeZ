@@ -70,6 +70,16 @@ public class BeltManager : MonoBehaviour
         GameObject frontBelt = frontBackBelt.Item1;
         GameObject backBelt = frontBackBelt.Item2;
 
+        //如果物体不是传送带，赋值为null
+        if (frontBelt != null && frontBelt.GetComponent<BeltComponent>() == null)
+        {
+            frontBelt = null;
+        }
+        if (backBelt != null && backBelt.GetComponent<BeltComponent>() == null)
+        {
+            backBelt = null;
+        }
+
         //如果前面有传送带，加入前面传送带的路径
         if (frontBelt != null)
         {
@@ -128,7 +138,7 @@ public class BeltManager : MonoBehaviour
         (Vector2Int frontGridPosition, Vector2Int backGridPosition) = GetFrontBackGridPosition(type, belt.transform.eulerAngles.z);
 
         //根据GridManager、传送带本身的网格坐标和前后目标相对格子位置，找到前后目标格子坐标
-        Vector2Int beltGridPosition = GridManager.MousePositionToGridPosition(belt.transform.position);
+        Vector2Int beltGridPosition = GridManager.WorldPositionToGridPosition(belt.transform.position);
         Vector2Int frontTargetGridPosition = beltGridPosition + frontGridPosition;
         Vector2Int backTargetGridPosition = beltGridPosition + backGridPosition;
 
@@ -175,6 +185,13 @@ public class BeltManager : MonoBehaviour
         return (frontBelt, backBelt);
     }
 
+    /// <summary>
+    /// 根据传送带类型和旋转角度，获取前后目标格子位置
+    /// 前方格子位置是指传送带终点处的格子位置，后方格子位置是指传送带起点处的格子位置
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="rotation"></param>
+    /// <returns></returns>
     public (Vector2Int, Vector2Int) GetFrontBackGridPosition(BeltType type, float rotation)
     {
         Vector2Int frontGridPosition = new Vector2Int();

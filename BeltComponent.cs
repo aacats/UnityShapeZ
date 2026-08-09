@@ -32,22 +32,7 @@ public class BeltComponent : MonoBehaviour
         //判断传送带是否是直线传送带，如果是就返回1，否则返回四分之Π
         return type == BeltType.top ? 1.0f : Mathf.PI / 4;
     }
-    // 函数：把在Belt上的线性进度转换成该段的局部坐标(直线段是简单插值,弯道段用三角函数算圆弧插值),最后再转换到世界坐标
-    public Vector3 GetLocalPosition(float localProgress)
-    {
-        // 这里需要根据传送带的类型和形状来计算局部坐标
-        // 简单示例，实际实现会更复杂
-        if (type == BeltType.top)
-        {
-            // 弯道传送带，使用圆弧插值
-            return new Vector3(Mathf.Sin(localProgress * Mathf.PI / 2), 0, Mathf.Cos(localProgress * Mathf.PI / 2));
-        }
-        else
-        {
-            // 直线传送带，使用简单插值
-            return new Vector3(localProgress, 0, 0);
-        }
-    }
+
     /// <summary>
     /// 将局部进度转换为局部坐标的函数
     /// localProgress是该物体从该传送带的起点沿着传送带走了多远的距离,范围是0~1
@@ -78,6 +63,27 @@ public class BeltComponent : MonoBehaviour
             //默认返回0,0
             Debug.LogWarning("BeltComponent.LocalProgressToLocalPosition: 未知的传送带类型，无法计算局部坐标");
             return Vector2.zero;
+        }
+    }
+
+    /// <summary>
+    /// 在传送带上添加一个EjectorComponent组件
+    /// </summary>
+    public void AddEjectorComponent()
+    {
+        if (GetComponent<Ejector>() == null)
+        {
+            gameObject.AddComponent<Ejector>();
+        }
+    }
+    /// <summary>
+    /// 在传送带上添加一个AcceptorComponent组件
+    /// </summary>
+    public void AddAcceptorComponent()
+    {
+        if (GetComponent<Acceptor>() == null)
+        {
+            gameObject.AddComponent<Acceptor>();
         }
     }
 

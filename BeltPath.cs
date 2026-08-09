@@ -4,16 +4,23 @@ using UnityEngine;
 using System.Linq;
 using System;
 
+//源码在路径改变时都会触发OnPathChanged事件让BeltPath重新计算末端物品的接收者
+//本项目计划使用发射器和接收器来实现传送带和建筑之间的运输，这需要给传送带路径两端的传送带添加这两个组件
+//所以OnPathChanged事件的作用就是重新计算接收者的位置和重新计算并挂载两端传送带的组件
+
+
 /// <summary>
 /// 实现传送带路径的功能,计划支持动态调整
 /// </summary>
 public class BeltPath
 {
     private GameManager gameManager;
+    private BeltManager beltManager;
     //Belt列表，从起点到终点的顺序排列
     [SerializeField] private List<GameObject> belts = new List<GameObject>();
     // 物体列表，DistanceToNext表示该物体到下一个物体或者终点的距离，Item表示该物体 
     [SerializeField] private List<(float DistanceToNext, Item item)> items = new List<(float DistanceToNext, Item item)>();
+
 
     /// <summary>
     /// 该整条传送带的总长度（实际长度）,由所有传送带的有效长度相加得到。
@@ -34,7 +41,10 @@ public class BeltPath
     /// 基础传送带速度
     /// </summary>
     private float baseBeltSpeed;
-
+    /// <summary>
+    /// 传送带路径接收者的位置
+    /// </summary>
+    private Vector2 receiverPosition;
     public float SpacingToFirstItem
     {
         get => spacingToFirstItem;
@@ -47,8 +57,10 @@ public class BeltPath
     {
         get => totalLength;
     }
-
-    public event Action<float> itemsProgress;
+    public Vector2 ReceiverPosition
+    {
+        get => receiverPosition;
+    }
 
     /// <summary>
     /// 初始化传送带路径
@@ -61,6 +73,7 @@ public class BeltPath
     void Init()
     {
         gameManager = GameObject.FindObjectOfType<GameManager>();
+        beltManager = GameObject.FindObjectOfType<BeltManager>();
 
         //执行反向引用
         foreach (var belt in belts)
@@ -80,6 +93,8 @@ public class BeltPath
 
         itemSpacingOnBelts = gameManager.GetBaseItemSpacing();
         baseBeltSpeed = gameManager.GetBaseBeltSpeed();
+
+        OnPathChanged();
     }
     public void BeltPathUpdate()
     {
@@ -170,6 +185,57 @@ public class BeltPath
 
     }
 
+    /// <summary>
+    /// 当传送带路径结构发生变化时调用该函数,重新计算接收者的位置和重新计算并挂载两端传送带的组件
+    /// </summary>
+    private void OnPathChanged()
+    {
+        if (belts.Count == 0)
+        {
+            return;
+        }
+        // 重新计算并挂载两端传送带的组件
+        // 先清除所有传送带上的EjectorComponent组件和Acceptor组件
+        foreach (var belt in belts)
+        {
+            if (belt.GetComponent<Ejector>() != null)
+            {
+                GameObject.Destroy(belt.GetComponent<Ejector>());
+            }
+            if (belt.GetComponent<Acceptor>() != null)
+            {
+                GameObject.Destroy(belt.GetComponent<Acceptor>());
+            }
+        }
+        // 获得传送带路径的起点和终点的传送带
+        GameObject startBelt = belts[0];
+        GameObject endBelt = belts[belts.Count - 1];
+
+        // 在起点和终点的传送带上添加EjectorComponent和AcceptorComponent组件
+        startBelt.AddComponent<Acceptor>();
+        endBelt.AddComponent<Ejector>();
+
+        // 重新计算接收者的世界坐标位置（修改receiverPosition）
+        // 先获取endBelt的Type和Rotation，然后调用BeltManager的GetFrontBackGridPosition函数获取前后目标格子位置
+        BeltComponent endBeltComponent = endBelt.GetComponent<BeltComponent>();
+        if (endBeltComponent == null)
+        {
+            Debug.LogError("endBeltComponent is null");
+            return;
+        }
+        (Vector2Int frontGridPosition, Vector2Int backGridPosition) = beltManager.GetFrontBackGridPosition(endBeltComponent.Type, endBelt.transform.eulerAngles.z);
+
+        // 使用获取到的前后目标格子位置来计算接收者的世界坐标位置
+        Vector2 relativeReceiverPosition = frontGridPosition;
+
+        // 获取endBelt的世界坐标
+        Vector2 endBeltWorldPosition = endBelt.transform.position;
+
+        // 计算接收者的世界坐标位置
+        receiverPosition = endBeltWorldPosition + relativeReceiverPosition;
+
+    }
+
     //动态放置和删除传送带的函数，更新spacingToFirstItem和totalLength
 
     /// <summary>
@@ -203,6 +269,7 @@ public class BeltPath
             //但是需要更新items中最后一个物体的DistanceToNext
             items[items.Count - 1] = (items[items.Count - 1].Item1 + additionalLength, items[items.Count - 1].Item2);
         }
+        OnPathChanged();
     }
     /// <summary>
     /// 将传送带加入到传送带路径的起点
@@ -224,6 +291,7 @@ public class BeltPath
         float additionalLength = beltComp.GetEffectiveLength();
         spacingToFirstItem += additionalLength;
         totalLength += additionalLength;
+        OnPathChanged();
     }
     /// <summary>
     /// 将另一个传送带路径加入到当前传送带路径的起点
@@ -253,18 +321,29 @@ public class BeltPath
         if (otherPath.items.Count != 0)
         {
             //另一个BeltPath终点的物体距离更新
-            otherPath.items[otherPath.items.Count - 1] = (otherPath.items[otherPath.items.Count - 1].Item1 + spacingToFirstItem, otherPath.items[otherPath.items.Count - 1].Item2);
+            for (int i = otherPath.items.Count - 1; i >= 0; i--)
+            {
+                if (i == otherPath.items.Count - 1)
+                {
+                    //将另一个路径的末端物体加入到当前路径的起点
+                    items.Insert(0, (otherPath.items[i].Item1 + spacingToFirstItem,
+                     otherPath.items[i].Item2));
+                }
+                else
+                {
+                    //将另一个路径的物体加入到当前路径的起点
+                    items.Insert(0, otherPath.items[i]);
+                }
+            }
+            spacingToFirstItem = otherPath.spacingToFirstItem;
         }
         else
         {
             //另一个BeltPath没有物体，更新spacingToFirstItem
             spacingToFirstItem += otherPath.totalLength;
         }
-        for (int i = otherPath.items.Count - 1; i >= 0; i--)
-        {
-            //将另一个路径的物体加入到当前路径的起点
-            items.Insert(0, otherPath.items[i]);
-        }
+
+        OnPathChanged();
     }
 
     /// <summary>
@@ -359,6 +438,7 @@ public class BeltPath
         {
             spacingToFirstItem = totalLength;
         }
+        OnPathChanged();
     }
 
 
@@ -414,10 +494,6 @@ public class BeltPath
 
         return positions;
     }
-
-
-    //ShapeZ代码中有事件：每当路径结构变化(建造/拆除/连接改变)时,重新计算这条路径末端物品要交给谁的问题
-    //该函数待建
 
 
     /// <summary>
