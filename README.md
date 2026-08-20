@@ -1,5 +1,4 @@
 
-https://github.com/user-attachments/assets/ad4097b4-d69e-4abd-a3cd-43fb19073192
 #                                             UnityShapeZ
 使用 Unity 引擎复刻自动化流水线游戏《异形工厂》（Shapez）的核心功能。
 
@@ -9,7 +8,8 @@ https://github.com/user-attachments/assets/ad4097b4-d69e-4abd-a3cd-43fb19073192
 3、自定义Editor实现可视化调试  
 
 直线及弯道传送带运输物体  
-<img width="266" height="166" alt="x6m65-jfnbk" src="https://github.com/user-attachments/assets/c0caa002-947d-4a7e-95ab-6b31d9d6506d" />  
+  <img width="266" height="166" alt="x6m65-jfnbk" src="https://github.com/user-attachments/assets/262d1993-1ec7-4505-9f36-4687992298cb" />
+
 
 
 
