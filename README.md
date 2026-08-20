@@ -3,9 +3,11 @@
 使用 Unity 引擎复刻自动化流水线游戏《异形工厂》（Shapez）的核心功能。
 
 当前内容包括：  
-1、传送带系统、传送带的动态调整，与其他建筑的交互  
-2、GPUInstance渲染图形  
-3、自定义Editor实现可视化调试  
+1、基础的数据结构（形状物体、颜色物体等）  
+2、传送带系统、传送带的动态调整，与其他建筑的交互  
+3、GPUInstance渲染图形  
+4、自定义Editor实现可视化调试  
+5、相机的移动、缩放和限制等功能  
 
 直线及弯道传送带运输物体  
   <img width="266" height="166" alt="x6m65-jfnbk" src="https://github.com/user-attachments/assets/262d1993-1ec7-4505-9f36-4687992298cb" />  
