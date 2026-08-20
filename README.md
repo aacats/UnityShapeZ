@@ -8,8 +8,9 @@
 3、自定义Editor实现可视化调试  
 
 直线及弯道传送带运输物体  
-  <img width="266" height="166" alt="x6m65-jfnbk" src="https://github.com/user-attachments/assets/262d1993-1ec7-4505-9f36-4687992298cb" />
-
+  <img width="266" height="166" alt="x6m65-jfnbk" src="https://github.com/user-attachments/assets/262d1993-1ec7-4505-9f36-4687992298cb" />  
+使用双列表模拟传送带运输情况，实现流畅运输、局部堵塞等情形。  
+不采用直接生成实体的方式而是根据每个物体的位置直接在每帧使用GPU实例化渲染图像。
 
 
 
